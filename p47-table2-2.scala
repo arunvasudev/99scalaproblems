@@ -9,6 +9,10 @@ class S99Boolean(val v: Boolean) {
     def and(b2: Boolean): Boolean = v && b2
     def or(b2: Boolean): Boolean = v || b2
     def xor(b2: Boolean) = !(v == b2)
+    def nand(b2:Boolean): Boolean = !(v && b2)
+    def nor(b2: Boolean): Boolean = !(v || b2)
+    def impl(b2: Boolean): Boolean = !b2 || v
+    def equ(b2: Boolean): Boolean = (v == b2)
 }
 
 object S99Boolean {
