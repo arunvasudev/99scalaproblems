@@ -1,4 +1,5 @@
-#Scala Problems
+#99 Scala Problems
 
-My embarrassingly non-idiomatic attempt at the 99 problems in Scala (S-99).
-Will revise as I get better at Scala functional-fu.
+My (non-idiomatic!) attempt at the <a href="http://aperiodic.net/phil/scala/s-99/">99 Scala Problems (S-99)</a>.
+
+I will revise these as I get better at Scala functional-fu.
