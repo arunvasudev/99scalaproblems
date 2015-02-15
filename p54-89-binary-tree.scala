@@ -7,6 +7,8 @@ sealed abstract class Tree[+T] {
     def flipped: Tree[T]
 
     def isSymmetric: Boolean
+
+    def addValue[U >: T <% Ordered[U]](v: U): Tree[U]
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
@@ -15,6 +17,11 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
     def flipped = Node(value, right.flipped, left.flipped)
 
     def isSymmetric = Tree.areIsomorphic(left, right.flipped)
+
+    def addValue[U >: T <% Ordered[U]](v: U): Tree[U] = 
+        if (v == value) this
+        else if (v < value) Node(value, left.addValue(v), right)
+        else Node(value, left, right.addValue(v))
 }
 
 case object End extends Tree[Nothing] {
@@ -23,6 +30,8 @@ case object End extends Tree[Nothing] {
     def flipped = End
 
     def isSymmetric = true
+
+    def addValue[U <% Ordered[U]](v: U): Tree[U] = Node(v, Tree.empty[U], Tree.empty[U])
 }
 
 object Node {
@@ -55,6 +64,9 @@ object Tree {
             areIsomorphic(t1Left, t2Left) && areIsomorphic(t1Right, t2Right)
         case _ => false
     }
+
+    def fromList[T <% Ordered[T]](xs: List[T]): Tree[T] = 
+        xs.foldLeft(empty[T])((accum, x) => accum.addValue(x))
 
     def empty[T]:Tree[T] = End
 }
