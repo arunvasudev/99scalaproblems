@@ -1,12 +1,28 @@
 package binaryTree
 
-sealed abstract class Tree[+T]
+sealed abstract class Tree[+T] {
+
+    // flips a tree about its root node (i.e., takes a mirror image about a line
+    // going through the root node
+    def flipped: Tree[T]
+
+    def isSymmetric: Boolean
+}
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
     override def toString = "T(" + value.toString + " " + left.toString + " " + right.toString + ")"
+
+    def flipped = Node(value, right.flipped, left.flipped)
+
+    def isSymmetric = Tree.areIsomorphic(left, right.flipped)
 }
+
 case object End extends Tree[Nothing] {
     override def toString = "."
+
+    def flipped = End
+
+    def isSymmetric = true
 }
 
 object Node {
@@ -31,6 +47,14 @@ object Tree {
                 l1.foldLeft(List.empty[Tree[T]])((accum, l) => l ::: accum)
             }
         }
+
+    // returns true if t1 and t2 have the same structure
+    def areIsomorphic[A, B](t1: Tree[A], t2: Tree[B]): Boolean = (t1, t2) match {
+        case (End, End) => true
+        case (Node(a1, t1Left, t1Right), Node(b1, t2Left, t2Right)) => 
+            areIsomorphic(t1Left, t2Left) && areIsomorphic(t1Right, t2Right)
+        case _ => false
+    }
 
     def empty[T]:Tree[T] = End
 }
