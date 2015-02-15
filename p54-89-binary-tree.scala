@@ -68,5 +68,8 @@ object Tree {
     def fromList[T <% Ordered[T]](xs: List[T]): Tree[T] = 
         xs.foldLeft(empty[T])((accum, x) => accum.addValue(x))
 
+    def symmetricBalancedTrees[T](n: Int, v: T): List[Tree[T]] = 
+        cBalanced(n, v).filter(_.isSymmetric)
+
     def empty[T]:Tree[T] = End
 }
