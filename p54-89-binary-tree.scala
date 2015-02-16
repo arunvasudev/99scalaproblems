@@ -11,6 +11,8 @@ sealed abstract class Tree[+T] {
     def addValue[U >: T <% Ordered[U]](v: U): Tree[U]
 
     def nodeCount: Int
+
+    def leafCount: Int
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
@@ -26,6 +28,11 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
         else Node(value, left, right.addValue(v))
 
     def nodeCount = 1 + left.nodeCount + right.nodeCount
+
+    def leafCount = this match {
+        case Node(v, End, End) => 1
+        case _ => left.leafCount + right.leafCount
+    }
 }
 
 case object End extends Tree[Nothing] {
@@ -38,6 +45,8 @@ case object End extends Tree[Nothing] {
     def addValue[U <% Ordered[U]](v: U): Tree[U] = Node(v, Tree.empty[U], Tree.empty[U])
 
     def nodeCount = 0
+
+    def leafCount = 0
 }
 
 object Node {
