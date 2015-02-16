@@ -9,6 +9,8 @@ sealed abstract class Tree[+T] {
     def isSymmetric: Boolean
 
     def addValue[U >: T <% Ordered[U]](v: U): Tree[U]
+
+    def nodeCount: Int
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
@@ -22,6 +24,8 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
         if (v == value) this
         else if (v < value) Node(value, left.addValue(v), right)
         else Node(value, left, right.addValue(v))
+
+    def nodeCount = 1 + left.nodeCount + right.nodeCount
 }
 
 case object End extends Tree[Nothing] {
@@ -32,6 +36,8 @@ case object End extends Tree[Nothing] {
     def isSymmetric = true
 
     def addValue[U <% Ordered[U]](v: U): Tree[U] = Node(v, Tree.empty[U], Tree.empty[U])
+
+    def nodeCount = 0
 }
 
 object Node {
@@ -127,6 +133,21 @@ object Tree {
         if (n <= 0) 0
         else math.floor(math.log(n + 1)/math.log(2.0)).toInt
     }
+
+    // p60 - all height balanced trees with a given number of nodes
+    // I'm just gonna generate and filter by node count - I'm sure there's some cleverer way of doing this
+    def hBalancedTreesWithNodes[T](n: Int, v: T): List[Tree[T]] = 
+        if (n <= 0) List()
+        else {
+            import scala.collection.mutable
+            val buf = new mutable.ListBuffer[Tree[T]]
+            val minHeight = minHBalancedHeight(n)
+            val maxHeight = maxHBalancedHeight(n)
+            for{h <- (minHeight to maxHeight)
+                t <- hBalancedTrees(h, v).filter(_.nodeCount == n) } { buf += t }
+
+            buf.toList
+        }
 
     def empty[T]:Tree[T] = End
 }
