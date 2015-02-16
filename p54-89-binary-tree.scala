@@ -185,4 +185,14 @@ object Tree {
         }
 
     def empty[T]:Tree[T] = End
+
+    // problem 63
+    // construct a complete binary tree with n nodes
+    def completeBinaryTree[T](n: Int, v: T): Tree[T] = {
+        def getNode(index: Int): Tree[T] = 
+            if (index > n) empty[T]
+            else Node(v, getNode(2*index), getNode(2*index + 1))
+
+        getNode(1)
+    }
 }
