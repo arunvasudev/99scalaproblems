@@ -3,7 +3,7 @@ package binaryTree
 sealed abstract class Tree[+T] {
 
     // flips a tree about its root node (i.e., takes a mirror image about a line
-    // going through the root node
+    // going through the root node)
     def flipped: Tree[T]
 
     def isSymmetric: Boolean
@@ -68,8 +68,32 @@ object Tree {
     def fromList[T <% Ordered[T]](xs: List[T]): Tree[T] = 
         xs.foldLeft(empty[T])((accum, x) => accum.addValue(x))
 
+    // problem 58
+    // Generate symmetric balanced trees through generate and test
     def symmetricBalancedTrees[T](n: Int, v: T): List[Tree[T]] = 
         cBalanced(n, v).filter(_.isSymmetric)
+
+    // problem 59
+    // construct a list of height balanced trees of height h
+    def hBalancedTrees[T](h: Int, v: T): List[Tree[T]] = 
+        if (h < 0) List()
+        else
+        if (h == 0) List(empty[T])
+        else {
+            val h1Set = hBalancedTrees(h - 1, v)
+            val h2Set = hBalancedTrees(h - 2, v)
+
+            import scala.collection.mutable
+            val buf = new mutable.ListBuffer[Tree[T]]
+            for{t1 <- h1Set; t2 <- h1Set} buf += Node(v, t1, t2)
+
+            for{t1 <- h1Set; t2 <- h2Set} {
+                buf += Node(v, t1, t2)
+                buf += Node(v, t2, t1)
+            }
+
+            buf.toList
+        }
 
     def empty[T]:Tree[T] = End
 }
