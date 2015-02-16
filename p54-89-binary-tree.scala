@@ -95,5 +95,38 @@ object Tree {
             buf.toList
         }
 
+    // given a height h, what's the minimum number of nodes a height balanced
+    // tree can have? Implementation of the formula: Min(h) = 1 + Min(h - 1) + Min(h - 2)
+    // generates an infinite series of (height, minNodeCount) pairs
+    def minHBalancedNodeCounts: Stream[(Int, Int)] = {
+        def helper(a: Int, b: Int, h: Int): Stream[(Int, Int)] = 
+            (h, a) #:: helper(b, a+b+1, h+1)
+
+        helper(0, 1, 0)
+    }
+
+    def minHBalancedNodes(h: Int): Int = {
+        if (h <= 0) return 0
+        val (h1, n1) = minHBalancedNodeCounts.drop(h).head
+        n1
+    }
+
+    def maxHBalancedNodes(h: Int): Int = {
+        math.ceil(math.pow(2, h)).toInt - 1
+    }
+
+    // given a node-count n, what's is the maximum height that a height balanced tree with 
+    // n nodes can have?
+    def maxHBalancedHeight(n: Int): Int = {
+        val (h1, _) = minHBalancedNodeCounts.dropWhile({ case (h, n1) => n1 < n }).head
+        h1
+    }
+
+    // what is the minimum height a balanced tree with n nodes must have
+    def minHBalancedHeight(n: Int): Int = {
+        if (n <= 0) 0
+        else math.floor(math.log(n + 1)/math.log(2.0)).toInt
+    }
+
     def empty[T]:Tree[T] = End
 }
