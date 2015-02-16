@@ -13,6 +13,8 @@ sealed abstract class Tree[+T] {
     def nodeCount: Int
 
     def leafCount: Int
+
+    def leafList: List[T]
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
@@ -33,6 +35,11 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
         case Node(v, End, End) => 1
         case _ => left.leafCount + right.leafCount
     }
+
+    def leafList = this match {
+        case Node(v, End, End) => List(v)
+        case _ => left.leafList ++ right.leafList
+    }
 }
 
 case object End extends Tree[Nothing] {
@@ -47,6 +54,8 @@ case object End extends Tree[Nothing] {
     def nodeCount = 0
 
     def leafCount = 0
+
+    def leafList = List()
 }
 
 object Node {
