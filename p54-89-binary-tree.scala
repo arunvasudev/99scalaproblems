@@ -159,8 +159,8 @@ object Tree {
     // given a node-count n, what's is the maximum height that a height balanced tree with 
     // n nodes can have?
     def maxHBalancedHeight(n: Int): Int = {
-        val (h1, _) = minHBalancedNodeCounts.dropWhile({ case (h, n1) => n1 < n }).head
-        h1
+        val (h1, n1) = minHBalancedNodeCounts.dropWhile({ case (h, n1) => n1 < n }).head
+        if (n1 == n) h1 else (h1 - 1)
     }
 
     // what is the minimum height a balanced tree with n nodes must have
