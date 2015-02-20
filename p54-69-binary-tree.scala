@@ -67,27 +67,6 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends NodeImpl[T]
 {
     override def toString = "T(" + value.toString + " " + left.toString + " " + right.toString + ")"
 
-    /*
-    def layoutBinaryTree(index: Int = 1, depth: Int = 1): PositionedNode[T] = this match {
-        case Node(v, End, End) => PositionedNode(v, End, End, index, depth)
-        case Node(v, left, End) => {
-            val leftN = left.layoutBinaryTree(index, depth+1);
-            PositionedNode(v, leftN, End, index + leftN.nodeCount, depth);
-        }
-
-        case Node(v, End, right) => {
-            val rightN = right.layoutBinaryTree(index + 1, depth + 1)
-            PositionedNode(v, End, rightN, index, depth)
-        }
-
-        case Node(v, left, right) => {
-            val leftN = left.layoutBinaryTree(index, depth + 1)
-            val rightN = right.layoutBinaryTree(index + leftN.nodeCount + 1, depth + 1)
-            PositionedNode(v, left, right, index, depth)
-        }
-    }
-    */
-
     def layoutBinaryTree(index: Int, depth: Int): PositionedNode[T] = {
         val leftN = if (left == End) End else left.layoutBinaryTree(index, depth + 1)
         val rightN = if (right == End) End else right.layoutBinaryTree(index + left.nodeCount + 1, depth + 1)
@@ -104,7 +83,7 @@ case class PositionedNode[+T](override val value: T,
                                  value.toString + " " + left.toString + 
                                  " " + right.toString + ")"
 
-    def layoutBinaryTree(index: Int = 1, depth: Int = 1) = this
+    def layoutBinaryTree(index: Int, depth: Int) = this
 }
 
 case object End extends Tree[Nothing] {
