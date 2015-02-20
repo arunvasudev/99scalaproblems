@@ -1,6 +1,6 @@
 package binaryTree
 
-sealed abstract class Tree[+T] {
+trait Tree[+T] {
 
     // flips a tree about its root node (i.e., takes a mirror image about a line
     // going through the root node)
@@ -21,8 +21,13 @@ sealed abstract class Tree[+T] {
     def atLevel(n: Int): List[T]
 }
 
-case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
-    override def toString = "T(" + value.toString + " " + left.toString + " " + right.toString + ")"
+trait NodeImpl[+T] extends Tree[T] {
+
+    val value: T
+
+    val left: Tree[T]
+
+    val right: Tree[T]
 
     def flipped = Node(value, right.flipped, left.flipped)
 
@@ -53,6 +58,21 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
     def atLevel(n: Int) = 
         if (n == 1) List(value)
         else left.atLevel(n - 1) ++ right.atLevel(n - 1)
+}
+
+case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends NodeImpl[T] 
+{
+    override def toString = "T(" + value.toString + " " + left.toString + " " + right.toString + ")"
+}
+
+case class PositionedNode[+T](override val value: T, 
+                              override val left: Tree[T], 
+                              override val right: Tree[T], 
+                              x: Int, y: Int) extends NodeImpl[T] 
+{
+    override def toString = "T[" + x.toString + "," + y.toString + "](" +
+                                 value.toString + " " + left.toString + 
+                                 " " + right.toString + ")"
 }
 
 case object End extends Tree[Nothing] {
