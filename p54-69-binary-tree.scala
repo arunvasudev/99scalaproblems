@@ -84,6 +84,8 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends NodeImpl[T]
 
     def layout2Width(invDepth: Int) = if (invDepth < 0) 0 else (Math.pow(2, invDepth + 1) - 1).toInt
 
+    // Problem 65
+    // Another scheme for laying out trees
     def layoutBinaryTree2: PositionedNode[T] = {
         val h = height
         val leftShiftX = layout2Width(h - leftMostChildDepth - 1)
@@ -107,6 +109,8 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends NodeImpl[T]
         case node@Node(_, _, _) => 1 + node.leftMostChildDepth
     }
 
+    // Problem 67A
+    // Convert a tree to a bracketed string representation
     def toBrString = (left, right) match {
         case (End, End) => value.toString
         case (_, _) => value.toString + "(" + left.toBrString + "," + right.toBrString + ")"
@@ -278,6 +282,8 @@ object Tree {
         getNode(1)
     }
 
+    // Problem 67B
+    // given a bracketed string representation, construct the tree
     def fromBrString(brStr: String): Tree[String] = {
         import java.util._
         val strtok = new StringTokenizer(brStr, ",()", true)
@@ -295,6 +301,8 @@ object Tree {
         t
     }
 
+    // tries to construct a tree from the given list of tokens
+    // throws Exception if fails
     def takeTree(toks: List[String]): (Tree[String], List[String]) = toks match {
         case ("("::_) => throw new Exception("Failed to parse")
         case (","::toks1) => (End, toks)
