@@ -20,7 +20,11 @@ trait Tree[+T] {
 
     def atLevel(n: Int): List[T]
 
-    def layoutBinaryTree(index: Int = 1, depth: Int = 1): PositionedNode[T]
+    def layoutBinaryTree1Impl(index: Int = 1, depth: Int = 1): PositionedNode[T]
+
+    def layoutBinaryTree2Impl(myDepth: Int = 1, maxDepth: Int, x: Int): PositionedNode[T]
+
+    def height: Int
 }
 
 trait NodeImpl[+T] extends Tree[T] {
@@ -61,16 +65,44 @@ trait NodeImpl[+T] extends Tree[T] {
         if (n == 1) List(value)
         else left.atLevel(n - 1) ++ right.atLevel(n - 1)
 
+    def height: Int = 1 + Math.max(left.height, right.height) 
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends NodeImpl[T] 
 {
     override def toString = "T(" + value.toString + " " + left.toString + " " + right.toString + ")"
 
-    def layoutBinaryTree(index: Int, depth: Int): PositionedNode[T] = {
-        val leftN = if (left == End) End else left.layoutBinaryTree(index, depth + 1)
-        val rightN = if (right == End) End else right.layoutBinaryTree(index + left.nodeCount + 1, depth + 1)
+    def layoutBinaryTree1: PositionedNode[T] = layoutBinaryTree1Impl(1, 1)
+
+    def layoutBinaryTree1Impl(index: Int, depth: Int): PositionedNode[T] = {
+        val leftN = if (left == End) End else left.layoutBinaryTree1Impl(index, depth + 1)
+        val rightN = if (right == End) End else right.layoutBinaryTree1Impl(index + left.nodeCount + 1, depth + 1)
         PositionedNode(value, leftN, rightN, index + left.nodeCount, depth)
+    }
+
+    def layout2Width(invDepth: Int) = if (invDepth < 0) 0 else (Math.pow(2, invDepth + 1) - 1).toInt
+
+    def layoutBinaryTree2: PositionedNode[T] = {
+        val h = height
+        val leftShiftX = layout2Width(h - leftMostChildDepth - 1)
+        val myWidth = layout2Width(h - 1)
+        val x = (myWidth - 1) / 2 + 1 - leftShiftX
+        layoutBinaryTree2Impl(1, h, x)
+    }
+
+    def layoutBinaryTree2Impl(myDepth: Int, maxDepth: Int, x: Int): PositionedNode[T] = {
+        val invDepth = maxDepth - myDepth
+        val childWidth = layout2Width(invDepth - 1)
+        val leftX = x - (childWidth - 1)/2 - 1
+        val rightX = x + (childWidth - 1)/2 + 1
+        val leftNode = if (left == End) End else  left.layoutBinaryTree2Impl(myDepth + 1, maxDepth, leftX)
+        val rightNode = if (right == End) End else right.layoutBinaryTree2Impl(myDepth + 1, maxDepth, rightX)
+        PositionedNode(value, leftNode, rightNode, x, myDepth) 
+    }
+
+    def leftMostChildDepth: Int = left match {
+        case End => 1
+        case node@Node(_, _, _) => 1 + node.leftMostChildDepth
     }
 }
 
@@ -83,7 +115,9 @@ case class PositionedNode[+T](override val value: T,
                                  value.toString + " " + left.toString + 
                                  " " + right.toString + ")"
 
-    def layoutBinaryTree(index: Int, depth: Int) = this
+    def layoutBinaryTree1Impl(index: Int, depth: Int) = this
+
+    def layoutBinaryTree2Impl(myDepth: Int, maxDepth: Int, x: Int) = this
 }
 
 case object End extends Tree[Nothing] {
@@ -105,7 +139,11 @@ case object End extends Tree[Nothing] {
 
     def atLevel(n: Int) = List()
 
-    def layoutBinaryTree(index: Int, depth: Int) = throw new Exception("Can't layout an empty tree")
+    def height = 0
+
+    def layoutBinaryTree1Impl(index: Int, depth: Int) = throw new Exception("Can't layout an empty tree")
+
+    def layoutBinaryTree2Impl(myDepth: Int, maxDepth: Int, x: Int) = throw new Exception("Can't layout an empty tree") 
 }
 
 object Node {
