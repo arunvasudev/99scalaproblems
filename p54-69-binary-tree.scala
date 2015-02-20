@@ -25,6 +25,8 @@ trait Tree[+T] {
     def layoutBinaryTree2Impl(myDepth: Int = 1, maxDepth: Int, x: Int): PositionedNode[T]
 
     def height: Int
+
+    def toBrString: String
 }
 
 trait NodeImpl[+T] extends Tree[T] {
@@ -104,6 +106,11 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends NodeImpl[T]
         case End => 1
         case node@Node(_, _, _) => 1 + node.leftMostChildDepth
     }
+
+    def toBrString = (left, right) match {
+        case (End, End) => value.toString
+        case (_, _) => value.toString + "(" + left.toBrString + "," + right.toBrString + ")"
+    }
 }
 
 case class PositionedNode[+T](override val value: T, 
@@ -118,6 +125,8 @@ case class PositionedNode[+T](override val value: T,
     def layoutBinaryTree1Impl(index: Int, depth: Int) = this
 
     def layoutBinaryTree2Impl(myDepth: Int, maxDepth: Int, x: Int) = this
+
+    def toBrString = toString
 }
 
 case object End extends Tree[Nothing] {
@@ -143,7 +152,9 @@ case object End extends Tree[Nothing] {
 
     def layoutBinaryTree1Impl(index: Int, depth: Int) = throw new Exception("Can't layout an empty tree")
 
-    def layoutBinaryTree2Impl(myDepth: Int, maxDepth: Int, x: Int) = throw new Exception("Can't layout an empty tree") 
+    def layoutBinaryTree2Impl(myDepth: Int, maxDepth: Int, x: Int) = throw new Exception("Can't layout an empty tree")
+
+    def toBrString = ""
 }
 
 object Node {
@@ -265,5 +276,47 @@ object Tree {
             else Node(v, getNode(2*index), getNode(2*index + 1))
 
         getNode(1)
+    }
+
+    def fromBrString(brStr: String): Tree[String] = {
+        import java.util._
+        val strtok = new StringTokenizer(brStr, ",()", true)
+        
+        import scala.collection.mutable
+        val buf = new mutable.ListBuffer[String]
+        while(strtok.hasMoreTokens) { buf += strtok.nextToken }
+
+        fromBrString(buf.toList)
+    }
+
+    def fromBrString(toks: List[String]): Tree[String] = {
+        val (t, toks1) = takeTree(toks)
+        if (!toks1.isEmpty) throw new Exception("Failed to parse tokens")
+        t
+    }
+
+    def takeTree(toks: List[String]): (Tree[String], List[String]) = toks match {
+        case ("("::_) => throw new Exception("Failed to parse")
+        case (","::toks1) => (End, toks)
+        case (")"::toks1) => (End, toks)
+        case (str::toks1) => toks1 match {
+                    case ("("::toks2) => {
+                        val (left, toks3) = takeTree(toks2)
+                        toks3 match {
+                            case (","::toks4) => {
+                                val (right, toks5) = takeTree(toks4)
+                                toks5 match {
+                                    case (")"::toks6) => (Node(str, left, right), toks6)
+                                    case _ => throw new Exception("Failed to parse after reading " + right)
+                                }
+                            }
+
+                            case _ => throw new Exception("Failed to parse after reading " + left)
+                        }
+                    }
+
+                    case _ => (Node(str, End, End), toks1)
+                }
+        case Nil => throw new Exception("takeTree called but there are no more tokens")
     }
 }
