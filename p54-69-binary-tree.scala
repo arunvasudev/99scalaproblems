@@ -359,4 +359,20 @@ object Tree {
         val rightNode = preInTree(preList.tail.drop(leftInList.length), rightInList)
         return Node(rootVal, leftNode, rightNode)
     }
+
+    def fromDotString(dotStr: String): Tree[Char] = {
+        val (tree, rest) = fromDotList(dotStr.toList)
+        if (!rest.isEmpty) throw new Exception("Failed to consume the entire string")
+        tree
+    }
+
+    def fromDotList(dotList: List[Char]): (Tree[Char], List[Char]) = dotList match {
+        case ('.'::rest) => (Tree.empty[Char], rest)
+        case (c::rest) => {
+            val (left, rest1) = fromDotList(rest)
+            val (right, rest2) = fromDotList(rest1)
+            (Node(c, left, right), rest2)
+        }
+        case Nil => throw new Exception("Can't create a tree from an empty list of characters")
+    }
 }
