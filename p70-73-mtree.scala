@@ -12,11 +12,16 @@ case class MTree[+T](value: T, children: List[MTree[T]]) {
     def toNodeString: String = value.toString + children.map(_.toNodeString).mkString("") + "^"
 
     // Problem 71
-    // the sum of the (depth -1)s of all the trees basically
+    // The sum of the (depth -1)s of all the trees basically
     def internalPathLength: Int = internalPathLengthImpl(0)
 
     private def internalPathLengthImpl(myLength: Int): Int = 
         myLength + children.map(_.internalPathLengthImpl(myLength + 1)).sum
+
+    // problem 72
+    // Construct the post-order traveral of the tree
+    def postOrder: List[T] = 
+        children.map(_.postOrder).foldRight(List[T]())((v, accum) => v ::: accum) ::: List(value)
 }
 
 object MTree {
