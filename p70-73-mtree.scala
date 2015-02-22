@@ -37,14 +37,14 @@ object MTree {
     // from a tree of type MTree[Char]
     def fromNodeString(nodeStr: String): MTree[Char] = {
         val toks = nodeStr.toList
-        val (mt, toksLeft) = takeTree(toks)
+        val (mt, toksLeft) = takeTreeFromNodeToks(toks)
         if (!toksLeft.isEmpty) throw new Exception("Couldn't consume all the tokens while creating MTree")
         mt
     }
 
-    def takeTree(toks0: List[Char]): (MTree[Char], List[Char]) = 
+    def takeTreeFromNodeToks(toks0: List[Char]): (MTree[Char], List[Char]) = 
         toks0 match {
-            case Nil => throw new Exception("takeTree encountered an empty list")
+            case Nil => throw new Exception("takeTreeFromNodeToks encountered an empty list")
             case ('^'::_) => throw new Exception("Encountered an unexpected '^'")
             case (v::toks1) => {
                 var toks = toks1               
@@ -53,12 +53,48 @@ object MTree {
                 val buf = new mutable.ListBuffer[MTree[Char]]
 
                 while(toks.head != '^'){
-                    val (nextTree, nextToks) = takeTree(toks)
+                    val (nextTree, nextToks) = takeTreeFromNodeToks(toks)
                     buf += nextTree
                     toks = nextToks
                 }
 
                 (MTree(v, buf.toList), toks.tail)
             }
+        }
+
+    // problem 73 - part II
+    // re-create am MTree from a lispyString representation
+    // assume that all values are characters for now
+    def fromLispyString(lStr: String): MTree[Char] = {
+        val toks = lStr.toList.filter(_ != ' ')
+        val (tree, toksLeft) = takeTreeFromLispyToks(toks)
+        if (!toksLeft.isEmpty) throw new Exception("fromLispyString couldn't consume all tokens!")
+        tree
+    }
+
+    def takeTreeFromLispyToks(toks0: List[Char]): (MTree[Char], List[Char]) = 
+        toks0 match {
+            case '('::toks1 =>  // read till we encounter a closing bracket
+                toks1 match {
+                    case v::toks2 => {
+                        import scala.collection.mutable
+                        val buf = new mutable.ListBuffer[MTree[Char]]
+
+                        var toks = toks2
+                        while(toks.head != ')'){
+                            val (tree, nextToks) = takeTreeFromLispyToks(toks)
+                            toks = nextToks
+                            buf += tree
+                        }
+
+                        (MTree(v, buf.toList), toks.tail)
+                    }
+
+                    case _ => throw new Exception("Couldn't parse starting from: " + toks1.toString)
+                }
+
+            case Nil | (')'::_) => throw new Exception("Failed to parse starting from: " + toks0.toString)
+
+            case v::rest => (MTree(v, List()), rest)
         }
 }
