@@ -339,4 +339,18 @@ object Tree {
                 }
         case Nil => throw new Exception("takeTree called but there are no more tokens")
     }
+
+    def preInTree[T](preList: List[T], inList: List[T]): Tree[T] = {
+        if (preList.length != inList.length)
+            throw new Exception("Incoming lists have different lengths - can't be of the same tree.")
+
+        if (preList.isEmpty) return Tree.empty[T]
+
+        val rootVal = preList.head
+        val leftInList = inList.takeWhile(_ != rootVal)
+        val rightInList = inList.dropWhile(_ != rootVal).tail
+        val leftNode = preInTree(preList.tail.take(leftInList.length), leftInList)
+        val rightNode = preInTree(preList.tail.drop(leftInList.length), rightInList)
+        return Node(rootVal, leftNode, rightNode)
+    }
 }
