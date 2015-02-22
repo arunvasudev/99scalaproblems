@@ -27,6 +27,8 @@ trait Tree[+T] {
     def height: Int
 
     def toBrString: String
+
+    def preOrder: List[T]
 }
 
 trait NodeImpl[+T] extends Tree[T] {
@@ -68,6 +70,8 @@ trait NodeImpl[+T] extends Tree[T] {
         else left.atLevel(n - 1) ++ right.atLevel(n - 1)
 
     def height: Int = 1 + Math.max(left.height, right.height) 
+
+    def preOrder: List[T] = value :: (left.preOrder ::: right.preOrder)
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends NodeImpl[T] 
@@ -159,6 +163,8 @@ case object End extends Tree[Nothing] {
     def layoutBinaryTree2Impl(myDepth: Int, maxDepth: Int, x: Int) = throw new Exception("Can't layout an empty tree")
 
     def toBrString = ""
+
+    def preOrder = List()
 }
 
 object Node {
