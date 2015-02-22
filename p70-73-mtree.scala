@@ -22,6 +22,12 @@ case class MTree[+T](value: T, children: List[MTree[T]]) {
     // Construct the post-order traveral of the tree
     def postOrder: List[T] = 
         children.map(_.postOrder).foldRight(List[T]())((v, accum) => v ::: accum) ::: List(value)
+
+    // problem 73, part 1
+    // convert this MTree to a lispy string
+    def toLispyString: String = 
+        if (children.isEmpty) value.toString
+        else "(" + value.toString + " " + children.map(_.toLispyString).mkString(" ") + ")"
 }
 
 object MTree {
