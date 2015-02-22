@@ -29,6 +29,8 @@ trait Tree[+T] {
     def toBrString: String
 
     def preOrder: List[T]
+
+    def inOrder: List[T]
 }
 
 trait NodeImpl[+T] extends Tree[T] {
@@ -72,6 +74,8 @@ trait NodeImpl[+T] extends Tree[T] {
     def height: Int = 1 + Math.max(left.height, right.height) 
 
     def preOrder: List[T] = value :: (left.preOrder ::: right.preOrder)
+
+    def inOrder: List[T] = left.inOrder ::: List(value) ::: right.inOrder
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends NodeImpl[T] 
@@ -165,6 +169,8 @@ case object End extends Tree[Nothing] {
     def toBrString = ""
 
     def preOrder = List()
+
+    def inOrder = List()
 }
 
 object Node {
