@@ -23,6 +23,15 @@ abstract class GraphBase[T, U]{
                                     edges == g.edges)
         case _ => false
     }
+
+    def addNode(n: T): Node = {
+        if (nodes.contains(n))
+            return nodes(n)
+
+        val newNode = Node(n)
+        nodes = nodes + ((n, newNode))
+        return newNode
+    }
 }
 
 class Graph[T, U] extends GraphBase[T, U] {
@@ -37,10 +46,12 @@ class Graph[T, U] extends GraphBase[T, U] {
         else None
 
     def addEdge(n1: T, n2: T, value: U) = {
-        val e = new Edge(nodes(n1), nodes(n2), value)
+        val node1 = addNode(n1)
+        val node2 = addNode(n2)
+        val e = new Edge(node1, node2, value)
         edges = edges + e
-        nodes(n1).adj = e :: nodes(n1).adj
-        nodes(n2).adj = e :: nodes(n2).adj
+        nodes(n1).adj = e :: node1.adj
+        nodes(n2).adj = e :: node2.adj
     }
 }
 
@@ -55,8 +66,19 @@ class Digraph[T, U] extends GraphBase[T, U] {
         else None
 
     def addArc(source: T, dest: T, value: U) = {
-        val e = new Edge(nodes(source), nodes(dest), value)
+        val sourceNode = addNode(source)
+        val destNode = addNode(dest)
+        val e = new Edge(sourceNode, destNode, value)
         edges = edges + e
-        nodes(source).adj = e :: nodes(source).adj
+        nodes(source).adj = e :: sourceNode.adj
+    }
+}
+
+object Graph {
+    def term[T, U](nodes: List[T], edges: List[(T, T)], defLabel: U): Graph[T, U] = {
+        val graph = new Graph[T, U]
+        nodes.foreach(n => graph.addNode(n))
+        edges.foreach({case (n1, n2) => graph.addEdge(n1, n2, defLabel)})
+        graph
     }
 }
