@@ -53,6 +53,17 @@ class Graph[T, U] extends GraphBase[T, U] {
         nodes(n1).adj = e :: node1.adj
         nodes(n2).adj = e :: node2.adj
     }
+
+    override def toString: String = {
+        import scala.collection.mutable
+        val edgesStr = edges.map(e => e.n1.value.toString + "-" + e.n2.value.toString)
+
+        val nodesPrinted = new mutable.HashSet[T]
+        edges.foreach(e => {nodesPrinted += e.n1.value; nodesPrinted += e.n2.value} )
+
+        val nodesStr = nodes.keys.filter(n => !nodesPrinted.contains(n)).map(_.toString)
+        "[" + (edgesStr ++ nodesStr).mkString(",") + "]"
+    }
 }
 
 class Digraph[T, U] extends GraphBase[T, U] {
@@ -90,6 +101,49 @@ object Graph {
         })
 
         graph
+    }
+
+    def fromFriendlyForm(str: String): Graph[String, String] = {
+        import java.util
+        val strtok = new util.StringTokenizer(str, " [],-", true)
+        
+        import scala.collection.mutable
+        val buf = new mutable.ListBuffer[String]
+        while(strtok.hasMoreTokens()) buf += strtok.nextToken
+
+        val toks = buf.filter(s => {s != " " && s != ","}).toList
+        fromFriendlyFormToks(toks)
+    }
+
+    def fromFriendlyFormToks(toks0: List[String]): Graph[String, String] = {
+        var currToks = toks0
+        if (currToks.head != "[")
+            throw new Exception("Friendly forms must begin with a '['")
+        else {
+            val graph = new Graph[String, String]
+            currToks = currToks.tail
+            while(!currToks.isEmpty){
+                currToks match {
+                    case "]"::nextToks => 
+                        if (!nextToks.isEmpty) throw new Exception("Illegal extra tokens found after ']'")
+                        else return graph 
+
+                    case src::"-"::dest::nextToks => {
+                        graph.addEdge(src, dest, "")
+                        currToks = nextToks
+                    }
+
+                    case str::nextToks => {
+                        graph.addNode(str)
+                        currToks = nextToks
+                    }
+
+                    case Nil => throw new Exception("Friendly form ran out of tokens to parse") 
+                }
+            }
+
+            throw new Exception("Friendly forms must end with a ']' - unterminated friendly form found")
+        }
     }
 }
 
