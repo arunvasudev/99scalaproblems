@@ -92,3 +92,22 @@ object Graph {
         graph
     }
 }
+
+object Digraph {
+    def term[T, U](nodes: List[T], edges: List[(T, T)], defLabel: U): Digraph[T, U] = {
+        val graph = new Digraph[T, U]
+        nodes.foreach(n => graph.addNode(n))
+        edges.foreach({case (n1, n2) => graph.addArc(n1, n2, defLabel)})
+        graph
+    }
+
+    def adjacentList[T, U](list: List[(T, List[T])], defLabel: U): Digraph[T, U] = {
+        val graph = new Digraph[T, U]
+        list.foreach({ case (n, otherEnds) => 
+            graph.addNode(n)
+            otherEnds.foreach(n1 => graph.addArc(n, n1, defLabel))
+        })
+
+        graph
+    }
+}
