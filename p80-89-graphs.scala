@@ -81,4 +81,14 @@ object Graph {
         edges.foreach({case (n1, n2) => graph.addEdge(n1, n2, defLabel)})
         graph
     }
+
+    def adjacentList[T, U](list: List[(T, List[T])], defLabel: U): Graph[T, U] = {
+        val graph = new Graph[T, U]
+        list.foreach({ case (n, otherEnds) => 
+            graph.addNode(n)
+            otherEnds.foreach(n1 => graph.addEdge(n, n1, defLabel))
+        })
+
+        graph
+    }
 }
