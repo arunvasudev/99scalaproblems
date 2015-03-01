@@ -1,8 +1,7 @@
 package graphs
 
-abstract class GraphBase[T, U]{
-    
-    case class Edge(n1: Node, n2: Node, value: Option[U]){
+abstract class GraphBase[T]{
+    case class Edge(n1: Node, n2: Node, value: Option[Int]){
         def toTuple = (n1.value, n2.value, value)
     }
 
@@ -19,7 +18,7 @@ abstract class GraphBase[T, U]{
     def edgeTarget(e: Edge, n: Node): Option[Node]
 
     override def equals(o: Any) = o match {
-        case g: GraphBase[T, U] => (nodes.keySet == g.nodes.keySet &&
+        case g: GraphBase[T] => (nodes.keySet == g.nodes.keySet &&
                                     edges == g.edges)
         case _ => false
     }
@@ -89,9 +88,9 @@ abstract class GraphBase[T, U]{
 
 }
 
-class Graph[T, U] extends GraphBase[T, U] {
+class Graph[T] extends GraphBase[T] {
     override def equals(o: Any) = o match {
-        case g: Graph[T, U] => super.equals(g)
+        case g: Graph[T] => super.equals(g)
         case _ => false
     }
 
@@ -100,7 +99,7 @@ class Graph[T, U] extends GraphBase[T, U] {
         else if (e.n2 == n) Some(e.n1)
         else None
 
-    def addEdge(n1: T, n2: T, value: Option[U]) = {
+    def addEdge(n1: T, n2: T, value: Option[Int]) = {
         val node1 = addNode(n1)
         val node2 = addNode(n2)
         val e = new Edge(node1, node2, value)
@@ -123,35 +122,33 @@ class Graph[T, U] extends GraphBase[T, U] {
         "[" + (edgesStr ++ nodesStr).mkString(", ") + "]"
     }
 
+    def makeTree(nodes: Set[T], edges: Set[Edge]): Graph[T] = 
+    {
+        val g = new Graph[T]
+        for(n <- nodes){ g.addNode(n) }
+        for(e <- edges){ g.addEdge(e.n1.value, e.n2.value, e.value) }
+        g
+    }
+
+    def isOutwardEdge(e: Edge, nodesSoFar: Set[T]): Boolean = 
+        nodesSoFar.contains(e.n1.value) ^ nodesSoFar.contains(e.n2.value)
+
+    // Problem 83 - generate all spanning trees of a given graph
     import scala.collection.mutable
-    def spanningTrees: List[Graph[T, U]] = {
-        val trees = new mutable.ListBuffer[Graph[T, U]]
+    def spanningTrees: List[Graph[T]] = {
+        val trees = new mutable.ListBuffer[Graph[T]]
         spanningTreesImpl(Set(nodes.head._1), Set(), edges, trees)
         trees.toList
     }
 
-    // Problem 83 - generate all spanning trees of a given graph
-    // this algorithm is extremely inefficient - we're basically
-    // generating all subsets of edges and determining which form a spanning tree
     def spanningTreesImpl(nodesSoFar: Set[T], 
                           edgesSoFar: Set[Edge],
                           edgesRemaining: Set[Edge],
-                          treesSoFar: mutable.ListBuffer[Graph[T, U]]): Unit = 
+                          treesSoFar: mutable.ListBuffer[Graph[T]]): Unit = 
     {
-        def makeTree(nodes: Set[T], edges: Set[Edge]): Graph[T, U] = 
-        {
-            val g = new Graph[T, U]
-            for(n <- nodes){ g.addNode(n) }
-            for(e <- edges){ g.addEdge(e.n1.value, e.n2.value, e.value) }
-            g
-        }
-
-        def isOutwardEdge(e: Edge): Boolean = 
-            nodesSoFar.contains(e.n1.value) ^ nodesSoFar.contains(e.n2.value)
-
         // find an edge that goes from currently known nodes
         // to an unknown node
-        for{e <- edgesRemaining.find(isOutwardEdge)}
+        for{e <- edgesRemaining.find(e => isOutwardEdge(e, nodesSoFar))}
         {
             val nextEdgesRemaining = edgesRemaining - e
 
@@ -170,11 +167,49 @@ class Graph[T, U] extends GraphBase[T, U] {
             spanningTreesImpl(nodesSoFar, edgesSoFar, nextEdgesRemaining, treesSoFar)
         }
     }
+
+    // Problem 84
+    // constructs the minimum spanning tree of a weighted graph
+    def minSpanningTree: Graph[T] = {
+        var edgesRemaining = edges
+        var nodesSoFar = Set(nodes.head._1)
+        minSpanningTreeImpl(nodesSoFar, Set(), edgesRemaining)
+    }
+
+    def minSpanningTreeImpl(nodesSoFar: Set[T], 
+                            edgesSoFar: Set[Edge], 
+                            edgesRemaining: Set[Edge]): Graph[T] = 
+    {
+        var nextEdge = None:Option[Edge]
+        edgesRemaining.foreach(e => { 
+            if (isOutwardEdge(e, nodesSoFar) && 
+                (nextEdge.isEmpty || nextEdge.get.value.get > e.value.get)) nextEdge = Some(e) 
+        })
+
+        if (nextEdge.isEmpty) {
+            // there are no edges from the current set of known nodes to the 
+            // set of unknown nodes, and we're not done with all the nodes
+            throw new Exception("Graph is not connected. No edge from {" + nodesSoFar.mkString(",") + "} to the rest of the nodes.")
+        }
+
+        val e = nextEdge.get
+        val nextEdgesRemaining = edgesRemaining - e 
+
+        var nextNodesSoFar = nodesSoFar
+        nextNodesSoFar = nextNodesSoFar + e.n1.value
+        nextNodesSoFar = nextNodesSoFar + e.n2.value
+
+        val nextEdgesSoFar = edgesSoFar + e
+        if (nextNodesSoFar.size == nodes.size)
+            makeTree(nextNodesSoFar, nextEdgesSoFar)
+        else
+            minSpanningTreeImpl(nextNodesSoFar, nextEdgesSoFar, nextEdgesRemaining)
+    }
 }
 
-class Digraph[T, U] extends GraphBase[T, U] {
+class Digraph[T] extends GraphBase[T] {
     override def equals(o: Any) = o match {
-        case g: Digraph[T, U] => super.equals(g)
+        case g: Digraph[T] => super.equals(g)
         case _ => false
     }
 
@@ -182,7 +217,7 @@ class Digraph[T, U] extends GraphBase[T, U] {
         if (e.n1 == n) Some(e.n2)
         else None
 
-    def addArc(source: T, dest: T, value: Option[U]) = {
+    def addArc(source: T, dest: T, value: Option[Int]) = {
         val sourceNode = addNode(source)
         val destNode = addNode(dest)
         val e = new Edge(sourceNode, destNode, value)
@@ -206,22 +241,22 @@ class Digraph[T, U] extends GraphBase[T, U] {
 }
 
 object Graph {
-    def term[T, U](nodes: List[T], edges: List[(T, T)]): Graph[T, U] = {
-        val graph = new Graph[T, U]
+    def term[T](nodes: List[T], edges: List[(T, T)]): Graph[T] = {
+        val graph = new Graph[T]
         nodes.foreach(n => graph.addNode(n))
         edges.foreach({case (n1, n2) => graph.addEdge(n1, n2, None)})
         graph
     }
 
-    def termLabel[T, U](nodes: List[T], edges: List[(T, T, U)]): Graph[T, U] = {
-        val graph = new Graph[T, U]
+    def termLabel[T](nodes: List[T], edges: List[(T, T, Int)]): Graph[T] = {
+        val graph = new Graph[T]
         nodes.foreach(n => graph.addNode(n))
         edges.foreach({case (n1, n2, v) => graph.addEdge(n1, n2, Some(v))})
         graph
     }
 
-    def adjacentList[T, U](list: List[(T, List[T])]): Graph[T, U] = {
-        val graph = new Graph[T, U]
+    def adjacentList[T](list: List[(T, List[T])]): Graph[T] = {
+        val graph = new Graph[T]
         list.foreach({ case (n, otherEnds) => 
             graph.addNode(n)
             otherEnds.foreach(n1 => graph.addEdge(n, n1, None))
@@ -230,8 +265,8 @@ object Graph {
         graph
     }
 
-    def adjacentListLabel[T, U](list: List[(T, List[(T, U)])]): Graph[T, U] = {
-        val graph = new Graph[T, U]
+    def adjacentListLabel[T](list: List[(T, List[(T, Int)])]): Graph[T] = {
+        val graph = new Graph[T]
         list.foreach({ case (n, otherEnds) => 
             graph.addNode(n)
             otherEnds.foreach({case (n1, v) => graph.addEdge(n, n1, Some(v))})
@@ -240,7 +275,7 @@ object Graph {
         graph
     }
 
-    def fromFriendlyString(str: String): Graph[String, String] = {
+    def fromFriendlyString(str: String): Graph[String] = {
         import java.util
         val strtok = new util.StringTokenizer(str, " [],-/", true)
         
@@ -252,12 +287,12 @@ object Graph {
         fromFriendlyToks(toks)
     }
 
-    def fromFriendlyToks(toks0: List[String]): Graph[String, String] = {
+    def fromFriendlyToks(toks0: List[String]): Graph[String] = {
         var currToks = toks0
         if (currToks.head != "[")
             throw new Exception("Friendly forms must begin with a '['")
         else {
-            val graph = new Graph[String, String]
+            val graph = new Graph[String]
             currToks = currToks.tail
             while(!currToks.isEmpty){
                 currToks match {
@@ -266,7 +301,7 @@ object Graph {
                         else return graph 
 
                     case src::"-"::dest::"/"::value::nextToks => {
-                        graph.addEdge(src, dest, Some(value))
+                        graph.addEdge(src, dest, Some(Integer.parseInt(value)))
                         currToks = nextToks
                     }
 
@@ -290,15 +325,15 @@ object Graph {
 }
 
 object Digraph {
-    def term[T, U](nodes: List[T], edges: List[(T, T)]): Digraph[T, U] = {
-        val graph = new Digraph[T, U]
+    def term[T](nodes: List[T], edges: List[(T, T)]): Digraph[T] = {
+        val graph = new Digraph[T]
         nodes.foreach(n => graph.addNode(n))
         edges.foreach({case (n1, n2) => graph.addArc(n1, n2, None)})
         graph
     }
 
-    def adjacentList[T, U](list: List[(T, List[T])]): Digraph[T, U] = {
-        val graph = new Digraph[T, U]
+    def adjacentList[T](list: List[(T, List[T])]): Digraph[T] = {
+        val graph = new Digraph[T]
         list.foreach({ case (n, otherEnds) => 
             graph.addNode(n)
             otherEnds.foreach(n1 => graph.addArc(n, n1, None))
@@ -307,7 +342,7 @@ object Digraph {
         graph
     }
 
-    def fromFriendlyString(str: String): Digraph[String, String] = {
+    def fromFriendlyString(str: String): Digraph[String] = {
         import java.util
         val strtok = new util.StringTokenizer(str, " >/,[]", true)
 
@@ -319,12 +354,12 @@ object Digraph {
         fromFriendlyToks(toks)
     }
 
-    def fromFriendlyToks(toks0: List[String]): Digraph[String, String] = {
+    def fromFriendlyToks(toks0: List[String]): Digraph[String] = {
         var currToks = toks0
         if (currToks.head != "[")
             throw new Exception("Friendly string must begin with a '['")
         else {
-            val graph = new Digraph[String, String]
+            val graph = new Digraph[String]
             currToks = currToks.tail
             while(!currToks.isEmpty){
                 currToks match {
@@ -333,7 +368,7 @@ object Digraph {
                         else return graph
 
                     case src::">"::dest::"/"::value::nextToks => {
-                        graph.addArc(src, dest, Some(value))
+                        graph.addArc(src, dest, Some(Integer.parseInt(value)))
                         currToks = nextToks
                     }
 
