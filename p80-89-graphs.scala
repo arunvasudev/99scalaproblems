@@ -86,6 +86,7 @@ abstract class GraphBase[T, U]{
             nodesSoFar.remove(nodesSoFar.length - 1)
        }
     }
+
 }
 
 class Graph[T, U] extends GraphBase[T, U] {
@@ -122,6 +123,53 @@ class Graph[T, U] extends GraphBase[T, U] {
         "[" + (edgesStr ++ nodesStr).mkString(", ") + "]"
     }
 
+    import scala.collection.mutable
+    def spanningTrees: List[Graph[T, U]] = {
+        val trees = new mutable.ListBuffer[Graph[T, U]]
+        spanningTreesImpl(Set(nodes.head._1), Set(), edges, trees)
+        trees.toList
+    }
+
+    // Problem 83 - generate all spanning trees of a given graph
+    // this algorithm is extremely inefficient - we're basically
+    // generating all subsets of edges and determining which form a spanning tree
+    def spanningTreesImpl(nodesSoFar: Set[T], 
+                          edgesSoFar: Set[Edge],
+                          edgesRemaining: Set[Edge],
+                          treesSoFar: mutable.ListBuffer[Graph[T, U]]): Unit = 
+    {
+        def makeTree(nodes: Set[T], edges: Set[Edge]): Graph[T, U] = 
+        {
+            val g = new Graph[T, U]
+            for(n <- nodes){ g.addNode(n) }
+            for(e <- edges){ g.addEdge(e.n1.value, e.n2.value, e.value) }
+            g
+        }
+
+        def isOutwardEdge(e: Edge): Boolean = 
+            nodesSoFar.contains(e.n1.value) ^ nodesSoFar.contains(e.n2.value)
+
+        // find an edge that goes from currently known nodes
+        // to an unknown node
+        for{e <- edgesRemaining.find(isOutwardEdge)}
+        {
+            val nextEdgesRemaining = edgesRemaining - e
+
+            // include the edge and search 
+            var nextNodesSoFar = nodesSoFar
+            nextNodesSoFar = nextNodesSoFar + e.n1.value
+            nextNodesSoFar = nextNodesSoFar + e.n2.value
+
+            val nextEdgesSoFar = edgesSoFar + e
+            if (nextNodesSoFar.size == nodes.size)
+                treesSoFar += makeTree(nextNodesSoFar, nextEdgesSoFar)
+            else
+                spanningTreesImpl(nextNodesSoFar, nextEdgesSoFar, nextEdgesRemaining, treesSoFar)
+
+            // exclude the edge and search
+            spanningTreesImpl(nodesSoFar, edgesSoFar, nextEdgesRemaining, treesSoFar)
+        }
+    }
 }
 
 class Digraph[T, U] extends GraphBase[T, U] {
