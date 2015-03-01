@@ -32,6 +32,46 @@ abstract class GraphBase[T, U]{
         nodes = nodes + ((n, newNode))
         return newNode
     }
+
+    import scala.collection.mutable
+
+    // Problem 81
+    // Returns the paths from one node to another
+    def findPaths(startNode: T, endNode: T): List[List[T]] = {
+        val nodesSoFar= new mutable.ListBuffer[T]
+        val edgesSoFar = new mutable.HashSet[Edge]
+        val pathsSoFar = new mutable.ListBuffer[List[T]]
+
+        nodesSoFar += startNode
+        findPathsImpl(endNode, nodesSoFar, edgesSoFar, pathsSoFar)
+        pathsSoFar.toList
+    }
+
+    // does a depth first search for the paths that end in endNode
+    def findPathsImpl(endNode: T, 
+                      nodesSoFar: mutable.ListBuffer[T], 
+                      edgesSoFar: mutable.HashSet[Edge],
+                      pathsSoFar: mutable.ListBuffer[List[T]]): Unit = 
+    {
+       val currNode = nodes(nodesSoFar.last)
+       val nextEdges = currNode.adj
+       for{e <- nextEdges
+           if (!edgesSoFar.contains(e))
+           nextNode <- edgeTarget(e, currNode)
+           if (!nodesSoFar.contains(nextNode)) }
+       {
+            nodesSoFar += nextNode.value
+            if (nextNode.value == endNode){
+               pathsSoFar += nodesSoFar.toList
+            }
+            else {
+               edgesSoFar += e
+               findPathsImpl(endNode, nodesSoFar, edgesSoFar, pathsSoFar)
+               edgesSoFar -= e
+            }
+            nodesSoFar.remove(nodesSoFar.length - 1)
+       }
+    }
 }
 
 class Graph[T, U] extends GraphBase[T, U] {
@@ -67,6 +107,7 @@ class Graph[T, U] extends GraphBase[T, U] {
         val nodesStr = nodes.keys.filter(n => !nodesPrinted.contains(n)).map(_.toString)
         "[" + (edgesStr ++ nodesStr).mkString(", ") + "]"
     }
+
 }
 
 class Digraph[T, U] extends GraphBase[T, U] {
