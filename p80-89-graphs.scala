@@ -43,7 +43,19 @@ abstract class GraphBase[T, U]{
         val pathsSoFar = new mutable.ListBuffer[List[T]]
 
         nodesSoFar += startNode
-        findPathsImpl(endNode, nodesSoFar, edgesSoFar, pathsSoFar)
+        findPathsImpl(endNode, nodesSoFar, edgesSoFar, pathsSoFar, false)
+        pathsSoFar.toList
+    }
+
+    // problem 82
+    // Returns all loops that start and end with startNode
+    def findCycles(startNode: T): List[List[T]] = {
+        val nodesSoFar= new mutable.ListBuffer[T]
+        val edgesSoFar = new mutable.HashSet[Edge]
+        val pathsSoFar = new mutable.ListBuffer[List[T]]
+
+        nodesSoFar += startNode
+        findPathsImpl(startNode, nodesSoFar, edgesSoFar, pathsSoFar, true)
         pathsSoFar.toList
     }
 
@@ -51,14 +63,16 @@ abstract class GraphBase[T, U]{
     def findPathsImpl(endNode: T, 
                       nodesSoFar: mutable.ListBuffer[T], 
                       edgesSoFar: mutable.HashSet[Edge],
-                      pathsSoFar: mutable.ListBuffer[List[T]]): Unit = 
+                      pathsSoFar: mutable.ListBuffer[List[T]],
+                      findCycles: Boolean): Unit = 
     {
        val currNode = nodes(nodesSoFar.last)
        val nextEdges = currNode.adj
        for{e <- nextEdges
            if (!edgesSoFar.contains(e))
-           nextNode <- edgeTarget(e, currNode)
-           if (!nodesSoFar.contains(nextNode)) }
+           nextNode <- edgeTarget(e, currNode) 
+           if (!nodesSoFar.contains(nextNode) ||
+               (findCycles && nextNode == endNode))}
        {
             nodesSoFar += nextNode.value
             if (nextNode.value == endNode){
@@ -66,7 +80,7 @@ abstract class GraphBase[T, U]{
             }
             else {
                edgesSoFar += e
-               findPathsImpl(endNode, nodesSoFar, edgesSoFar, pathsSoFar)
+               findPathsImpl(endNode, nodesSoFar, edgesSoFar, pathsSoFar, findCycles)
                edgesSoFar -= e
             }
             nodesSoFar.remove(nodesSoFar.length - 1)
